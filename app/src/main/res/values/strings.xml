@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RemoteViewDemo</string>
+    <string name="open_remoteview">打开通知</string>
+    <string name="open_document">打开文件管理</string>
+</resources>
