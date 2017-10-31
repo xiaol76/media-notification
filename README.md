@@ -1,11 +1,25 @@
-# media-notification
 ## Android O Media Notification图片颜色渐变实现
 
 ### 实现效果
 
 ![背景虚化效果](http://note.youdao.com/yws/api/personal/file/WEB278da27ebeddf9408af864e4bf05b0b9?method=download&shareKey=096cbe1bdd9a3b436c8c3734ae1d2665)
 
-实现分为3部分：1.取背景色前景色、2.根据背景色前景色计算背景上的文字颜色、 3.根据背景色对图片进行模糊着色处理，这种效果可以用来实现换肤或者和更加复杂的视觉
+实现分为3部分：1.取背景色前景色、2.根据背景色前景色计算背景上的文字颜色、 3.根据背景色对图片进行模糊着色处理，这种效果可以用来实现换肤或者和更加复杂的视觉，实现方案如下：
+
+- 前景色用来生成背景上的文字颜色，前景色和背景色对比度大于4.5时使用前景色作为文字颜色，小于4.5时根据前景色进行运算直到找到和背景色对比度大于4.5的颜色作为文字颜色
+- 背景色用来作为背景view的backgroundColor，模糊是对图片进行模糊处理，如图：
+
+![示意图](http://on-img.com/chart_image/59f71bf6e4b0edf0e25ca034.png)
+
+- 图片模糊过程主要分为三个步骤
+
+  1）使用LinearGradient和DST_IN将原图画成透明度从0.0f到0.4f到1.0f的图像
+
+  2）将paint的colorFilter设置目标颜色为背景色减去原来图像上每个像素的亮度和背景色亮度的差值的颜色，paint的透明度50%，使用paint将变化后图像画到新的bitmap上
+
+  3）使用LinearGradient和DST_IN在1）的图片上再次绘制，将图片渐变调整为从0.0f到0.6f到1.0f，然后绘制到新的bitmap上
+
+  新的bitmap就是我们需要的模糊渐变图片
 
 为方便理解首先了解下HSL色彩空间的一些概念，以下来自维基百科
 
@@ -17,7 +31,7 @@
 
 ### 背景色
 
-1.主背景色通过support包中的`Palette`实现，实现思路是使用`Palette`对图片进行取样，取出使用最多的一种颜色，如果这种颜色是黑色或者白色，就取使用第二多的颜色，实现源码：
+1.主背景色通过support包中的`Palette`实现，实现思路是使用`Palette`对图片进行取样，从图片左侧40%区域的颜色取出使用最多的一种颜色，如果这种颜色是黑色或者白色，就取使用第二多的颜色，实现源码：
 ```
 private int findBackgroundColorAndFilter(Palette palette) {
         // by default we use the dominant palette
@@ -65,7 +79,7 @@ private int findBackgroundColorAndFilter(Palette palette) {
 ```
 private static final float BLACK_MAX_LIGHTNESS = 0.08f;
 private static final float WHITE_MIN_LIGHTNESS = 0.90f;
-
+    
 /**
 * @return true if the color represents a color which is close to black.
  */
